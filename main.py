@@ -1,6 +1,8 @@
 import pygame
 
-from settings import BLACK, FPS, SCREEN_HEIGHT, SCREEN_WIDTH
+from crt import CRT
+from player import Player
+from settings import FPS, GRAY, SCREEN_HEIGHT, SCREEN_WIDTH
 
 
 class Game:
@@ -10,6 +12,11 @@ class Game:
 		pygame.display.set_caption("Metamorfose 2D")
 		self.clock = pygame.time.Clock()
 		self.running = True
+		self.crt = CRT(self.screen)
+
+		self.all_sprites = pygame.sprite.Group()
+		self.player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+		self.all_sprites.add(self.player)
 
 	def run(self) -> None:
 		while self.running:
@@ -26,10 +33,12 @@ class Game:
 				self.running = False
 
 	def update(self, dt: float) -> None:
-		_ = dt
+		self.all_sprites.update(dt)
 
 	def draw(self) -> None:
-		self.screen.fill(BLACK)
+		self.screen.fill(GRAY)
+		self.all_sprites.draw(self.screen)
+		self.crt.draw()
 		pygame.display.flip()
 
 
