@@ -2,16 +2,24 @@ import pygame
 
 from crt import CRT
 from scene.base_scene import BaseScene
+from scene.epilogue import EpilogueScene
 from scene.game_over import GameOverScene
 from scene.menu import MenuScene
 from scene.phase1 import Phase1Scene
+from scene.phase2 import Phase2Scene
+from scene.phase3 import Phase3Scene
+from scene.phase4 import Phase4Scene
 from settings import FPS, SCREEN_HEIGHT, SCREEN_WIDTH
 
 
 _SCENE_REGISTRY: dict[str, type[BaseScene]] = {
     "menu": MenuScene,
     "phase1": Phase1Scene,
+    "phase2": Phase2Scene,
+    "phase3": Phase3Scene,
+    "phase4": Phase4Scene,
     "game_over": GameOverScene,
+    "epilogue": EpilogueScene,
 }
 
 

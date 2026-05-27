@@ -1,6 +1,7 @@
 import pygame
 
 from settings import TILE_SIZE
+from systems.spatial_hash import SpatialHash
 
 # Tile IDs
 FLOOR = 0
@@ -42,6 +43,12 @@ class TileMap:
         self.width = self.cols * tile_size
         self.height = self.rows * tile_size
         self.wall_rects = self._build_walls()
+        self._spatial_hash = SpatialHash(cell_size=tile_size * 2)
+        self._spatial_hash.build(self.wall_rects)
+
+    def walls_near(self, hitbox: pygame.Rect) -> list[pygame.Rect]:
+        """Return only wall rects that actually intersect hitbox (spatial hash query)."""
+        return self._spatial_hash.query(hitbox)
 
     def _build_walls(self) -> list[pygame.Rect]:
         walls = []

@@ -40,8 +40,8 @@ def apply_to_player(flags: EventFlags, player) -> None:
     player.current_stamina = min(flags.current_stamina, flags.max_stamina)
     player.max_hunger = flags.max_hunger
     player.current_hunger = min(flags.current_hunger, flags.max_hunger)
-    if flags.apple_debuff and not player.apple_debuff:
-        player.apply_apple_debuff()
+    if flags.apple_debuff:
+        player.apple_debuff = True  # stats already restored from save; don't re-apply multiplier
 
 
 def has_save() -> bool:

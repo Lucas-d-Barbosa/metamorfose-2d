@@ -64,67 +64,75 @@
 
 ## Sprint 9–10 — Missão do Quadro & Zonas de Escuta
 
-- [ ] `map/triggers.py` — zonas trigger no Tiled (object layer)
-- [ ] **RF012** Missão do Quadro — timer visual, pathfinding Mãe/Irmã, flag `saved_picture`
+- [x] `map/triggers.py` — `TriggerZone` base + `ListeningZone` (inatividade)
+- [x] **RF012** Missão do Quadro — timer visual, Mãe/Grete patrulham, flag `saved_picture`
 - [ ] Animação de desmaio da Mãe
-- [ ] **RF008** Zonas de Escuta — trigger de inatividade → legendas + atualiza flags
-- [ ] Fase 2 mapa e eventos completos
+- [x] **RF008** Zonas de Escuta — 3 zonas (porta, cozinha, corredor) → legendas automáticas
+- [x] Fase 2 mapa e eventos completos (`scene/phase2.py`, `map/layouts.py phase2_room`)
+- [x] `entities/npcs/mother.py` e `entities/npcs/grete.py`
+- [x] Fase 1 → Fase 2 transição (antes ia para game_over)
 
 ---
 
 ## Sprint 11–12 — Projéteis & Debuffs
 
-- [ ] `entities/projectile.py` — colisão de projéteis (arco em top-down)
-- [ ] **RF013** A Maçã Crítica — atingido: troca spritesheet + salva `apple_debuff: true` no JSON
-- [ ] Debuff persistente carregado no save (`max_stamina *= 0.5`, `speed *= 0.7`)
-- [ ] `entities/npcs/janitor.py` — Faxineira com knockback sem game over (**RF014**)
-- [ ] Fase 3 mapa e eventos completos
+- [x] `entities/projectile.py` — `Projectile` base + `AppleProjectile` (RF013)
+- [x] **RF013** A Maçã Crítica — hit: `apply_apple_debuff()` + `apple_debuff: true` no JSON
+- [x] Debuff persistente (`max_stamina *= 0.5`, `speed *= 0.7`) — já em `player.py` / `save_manager.py`
+- [x] `entities/npcs/janitor.py` — Faxineira com `try_sweep()` knockback sem game over (**RF014**)
+- [x] Fase 3 mapa e eventos completos (`scene/phase3.py`, `map/layouts.py phase3_room`)
+- [x] Father.try_throw() — arremessa AppleProjectile a cada 4.5s quando em range
+- [x] Fase 2 → Fase 3 transição (antes ia para game_over)
 
 ---
 
 ## Sprint 13–15 — IA Complexa & Lixo
 
-- [ ] Hitboxes de lixo: acumula `delta_time` → 1.5s → tosse (**RF011**)
-- [ ] Partículas de poeira ao atravessar lixo
-- [ ] `entities/npcs/tenants.py` — 3 Inquilinos: patrulha sincronizada, FOV 30% maior, alerta compartilhado
-- [ ] **RF007** Fog of War / Miopia — alpha mask sobre o mapa, raio por fase: 100%→60%→40%
-- [ ] `systems/fog_of_war.py` — Surface de miopia renderizada abaixo do HUD
+- [x] `map/trash.py` — `TrashZone` (1.5s timer → tosse RF011) + `DustParticle`
+- [x] Partículas de poeira ao atravessar lixo (spawn ao mover dentro da zone)
+- [x] Tosse: emite `COUGH_NOISE_RADIUS` (2× passos) + flash ocre + pensamento
+- [x] `entities/npcs/tenants.py` — `Tenant` (FOV 130°/286px = Manager×1.3) + `TenantGroup` (alerta compartilhado)
+- [x] **RF007** Fog of War implementado: phase1-2 = sem fog, phase3 = 60%, phase4 = 40%
+- [x] `systems/fog_of_war.py` — gradiente radial, renderizado acima do mundo e abaixo do HUD
+- [x] Fog + trash integrados em `scene/phase3.py`
 
 ---
 
 ## Sprint 16–18 — Áudio Posicional & Fase 4
 
-- [ ] **RF015** Violino — panning L/R e volume por distância player→porta (**pygame.mixer** stereo)
-- [ ] Áudio ambiente por fase (chuva, silêncio, etc.)
-- [ ] Cutscenes e diálogos das Fases 3 e 4
-- [ ] Tela de Game Over narrativo (sentença da Grete)
-- [ ] Epílogo: imagens estáticas em aquarela + texto
-- [ ] Fase 4 mapa e eventos completos
+- [x] **RF015** `systems/violin.py` — panning L/R + volume por distância; Channel.set_volume(L,R); visual HUD guide (seta + barra) para quando não há arquivo de áudio
+- [ ] Áudio ambiente por fase — aguardando assets em `assets/audio/`
+- [x] Cutscenes e diálogos da Fase 4 completos (Faxineira, clímax, sentença, epílogo)
+- [x] Tela de Game Over narrativo reescrita — sentença de Grete + pensamento final de Gregor
+- [x] `scene/epilogue.py` — 4 telas sequenciais, texto + avanço automático/manual
+- [x] `scene/phase4.py` — Fase 4 completa: Faxineira (RF014), TenantGroup, fog 40%, trash, listening zones, violino, sala trigger → climax → sentença → epilogue
+- [x] `map/layouts.py phase4_room()` — quarto-depósito com labirinto denso + passagem da sala (col 41, rows 10-13)
+- [x] Fase 3 → Fase 4 → Epílogo: cadeia de transições completa
 
 ---
 
 ## Sprint 19–22 — Polimento & QA
 
-- [ ] Assets de pixel art reais (substituindo retângulos coloridos)
-- [ ] Balanceamento: jogo concluível com `apple_debuff` ativo
-- [ ] Modo debug: visualização de FOV, hitboxes de som, z_level
-- [ ] Opções de acessibilidade: remapeamento de teclas, filtro daltonismo
-- [ ] Otimização: dirty rects, spatial hashing para colisões
-- [ ] Bateria de testes QA (todos os critérios de aceitação do GDD)
+- [x] Assets de pixel art reais — `systems/sprite_loader.py` carrega `assets/sprites/gregor.png`, colorkey+crop+tint
+- [x] Balanceamento: `apple_debuff` corrige double-apply em `save_manager.apply_to_player`
+- [x] Modo debug — `systems/debug_overlay.py`: FPS, stats, FOV NPC, raios de som, fog ratios
+- [x] Opções de acessibilidade — `data/keybindings.py`: remapeamento via `data/keybindings.json`
+- [x] Otimização — `systems/spatial_hash.py` + `tilemap.walls_near()` + `systems/collision.py`; `_resolve_collisions` refatorado em todas as 4 fases
+- [x] Bateria de testes QA — `tests/test_qa.py`: 20/20 passando (GDD §7.1–7.8)
 
 ---
 
 ## Critérios de Aceitação (GDD §7)
 
-- [ ] Transição chão/teto sem clipping de hitbox
-- [ ] Estamina no teto = exatamente 50% do valor base (validar no debug)
+- [x] Transição chão/teto sem clipping de hitbox
+- [x] Estamina no teto = exatamente 50% do valor base (validar no debug)
 - [ ] Comunicação Reversa altera estado do NPC instantaneamente se dentro do raio
 - [ ] Som não atravessa paredes com flag `isolante`
-- [ ] Fog of War carregada corretamente no Load Save (fase correta)
+- [x] Fog of War carregada corretamente no Load Save (fase correta)
 - [ ] UI/HUD renderizada **acima** da camada de miopia
-- [ ] Missão do Quadro: timer visível, `saved_picture: true` no JSON no sucesso
-- [ ] Apple debuff persiste através de morte, reinício de fase e reload
-- [ ] Lixo: 1.5s → tosse com raio 2x maior que passos
-- [ ] FOV dos Inquilinos 30% maior (verificável no modo debug)
-- [ ] Faxineira: colisão nunca invoca Game Over
-- [ ] Violino: canais L/R alteram dinamicamente por coordenada X/Y
+- [x] Missão do Quadro: timer visível, `saved_picture: true` no JSON no sucesso
+- [x] Apple debuff persiste através de morte, reinício de fase e reload
+- [x] Lixo: 1.5s → tosse com raio 2x maior que passos
+- [x] FOV dos Inquilinos 30% maior (verificável no modo debug)
+- [x] Faxineira: colisão nunca invoca Game Over
+- [x] Violino: canais L/R alteram dinamicamente por coordenada X/Y

@@ -61,3 +61,103 @@ def phase1_room() -> list[list[int]]:
     _fill_rect(layout, 14, 25, 15, 27, FURNITURE)
 
     return layout
+
+
+# ---------------------------------------------------------------------------
+# Phase 2 — Gregor's Bedroom (emptied version, same dimensions)
+# Only the picture frame and door remain; furniture was removed by Mãe/Grete.
+# ---------------------------------------------------------------------------
+def phase2_room() -> list[list[int]]:
+    COLS, ROWS = 42, 24
+    layout = _empty(ROWS, COLS)
+    _border(layout)
+
+    # Same door gap
+    layout[ROWS - 1][19] = DOOR_OPEN
+    layout[ROWS - 1][20] = DOOR_OPEN
+
+    # Picture frame still on wall — player's objective
+    layout[6][1] = CEILING_ACCESS
+    layout[7][1] = CEILING_ACCESS
+
+    # Scratch marks on ceiling (Gregor's crawling marks — ceiling_access tiles)
+    for c in range(5, 38, 6):
+        layout[1][c] = CEILING_ACCESS
+
+    return layout
+
+
+# ---------------------------------------------------------------------------
+# Phase 3 — Gregor's Bedroom turned storage room (junk maze)
+# Crates and debris block paths; Father patrols aggressively.
+# ---------------------------------------------------------------------------
+def phase3_room() -> list[list[int]]:
+    COLS, ROWS = 42, 24
+    layout = _empty(ROWS, COLS)
+    _border(layout)
+
+    layout[ROWS - 1][19] = DOOR_OPEN
+    layout[ROWS - 1][20] = DOOR_OPEN
+
+    # Junk piles — broken furniture, crates (FURNITURE = solid)
+    _fill_rect(layout, 3,  5,  4,  7, FURNITURE)   # crate stack left
+    _fill_rect(layout, 3, 14,  4, 16, FURNITURE)   # crate center
+    _fill_rect(layout, 3, 28,  4, 30, FURNITURE)   # crate right
+    _fill_rect(layout, 8,  2,  9,  4, FURNITURE)   # broken wardrobe remnant
+    _fill_rect(layout, 8, 20,  9, 22, FURNITURE)   # old desk
+    _fill_rect(layout, 8, 33,  9, 35, FURNITURE)   # stacked boxes
+    _fill_rect(layout, 14, 8, 15, 10, FURNITURE)   # debris mid-left
+    _fill_rect(layout, 14,26, 15, 28, FURNITURE)   # debris mid-right
+    _fill_rect(layout, 18, 5, 19,  7, FURNITURE)   # bottom-left pile
+    _fill_rect(layout, 18,34, 19, 36, FURNITURE)   # bottom-right pile
+
+    # Ceiling access strips (wall-crawl routes)
+    for c in range(2, 40, 5):
+        layout[1][c] = CEILING_ACCESS
+    for c in range(4, 38, 7):
+        layout[ROWS - 2][c] = CEILING_ACCESS
+
+    return layout
+
+
+# ---------------------------------------------------------------------------
+# Phase 4 — The Dump / The Music
+# Even more junk. Sala passage on the right wall (rows 10–13, col 41).
+# Tenants patrol cols 30–41; janitor roams the full room.
+# ---------------------------------------------------------------------------
+def phase4_room() -> list[list[int]]:
+    COLS, ROWS = 42, 24
+    layout = _empty(ROWS, COLS)
+    _border(layout)
+
+    # Bottom door (quarto ↔ corridor, kept for continuity)
+    layout[ROWS - 1][19] = DOOR_OPEN
+    layout[ROWS - 1][20] = DOOR_OPEN
+
+    # Sala passage — right wall gap (rows 10–13)
+    for r in range(10, 14):
+        layout[r][COLS - 1] = DOOR_OPEN
+
+    # Dense junk labyrinth
+    _fill_rect(layout, 2,  2,  4,  4, FURNITURE)   # left-top pile
+    _fill_rect(layout, 2, 10,  4, 12, FURNITURE)   # center-top crates
+    _fill_rect(layout, 2, 20,  4, 22, FURNITURE)   # center-top right
+    _fill_rect(layout, 2, 30,  4, 32, FURNITURE)   # right-top pile
+    _fill_rect(layout, 7,  6,  9,  8, FURNITURE)   # mid-left debris
+    _fill_rect(layout, 7, 16,  9, 18, FURNITURE)   # mid-center debris
+    _fill_rect(layout, 7, 26,  9, 28, FURNITURE)   # mid-right debris
+    _fill_rect(layout, 12, 2, 14,  5, FURNITURE)   # heavy left pile
+    _fill_rect(layout, 12,12, 14, 15, FURNITURE)   # heavy center pile
+    _fill_rect(layout, 12,22, 14, 25, FURNITURE)   # heavy right pile
+    _fill_rect(layout, 17, 7, 19,  9, FURNITURE)   # bottom-left junk
+    _fill_rect(layout, 17,17, 19, 19, FURNITURE)   # bottom-center junk
+    _fill_rect(layout, 17,28, 19, 30, FURNITURE)   # bottom-right junk
+
+    # Ceiling crawl routes (thick strip near top and alongside right wall)
+    for c in range(2, 40, 4):
+        layout[1][c] = CEILING_ACCESS
+    for r in range(2, ROWS - 2):
+        if layout[r][COLS - 2] == FLOOR:
+            layout[r][COLS - 2] = CEILING_ACCESS
+
+    return layout

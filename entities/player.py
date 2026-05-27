@@ -55,11 +55,19 @@ class Player(pygame.sprite.Sprite):
     # -------------------------------------------------------------------------
 
     def _build_sprite(self) -> None:
-        self.image.fill((0, 0, 0, 0))
-        size = self.image.get_width()
-        pygame.draw.circle(self.image, GREEN, (size // 2, size // 2), size // 2)
-        # direction indicator (small dot in front)
-        pygame.draw.circle(self.image, WHITE, (size // 2, size // 4), 3)
+        try:
+            from systems.sprite_loader import get_player_sprite
+            facing_left = self.velocity.x < -5 if hasattr(self, "velocity") else False
+            self.image = get_player_sprite(
+                apple_debuff=self.apple_debuff,
+                z_level=self.z_level,
+                facing_left=facing_left,
+            )
+        except Exception:
+            self.image.fill((0, 0, 0, 0))
+            size = self.image.get_width()
+            pygame.draw.circle(self.image, GREEN, (size // 2, size // 2), size // 2)
+            pygame.draw.circle(self.image, WHITE, (size // 2, size // 4), 3)
 
     def apply_apple_debuff(self) -> None:
         if self.apple_debuff:
@@ -115,6 +123,7 @@ class Player(pygame.sprite.Sprite):
         self._move(dt)
         self._update_stats(dt)
         self._update_facing()
+        self._build_sprite()
 
     def _move(self, dt: float) -> None:
         target_velocity = self.direction * self.effective_speed
