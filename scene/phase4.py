@@ -115,7 +115,7 @@ class Phase4Scene(BaseScene):
     def __init__(self, game) -> None:
         super().__init__(game)
 
-        self.flags = save_mgr.load()
+        self.flags = save_mgr.load(self.game.nickname)
 
         self.tilemap = TileMap(phase4_room(), TILE_SIZE)
         self.camera = Camera(self.tilemap.width, self.tilemap.height)
@@ -298,7 +298,7 @@ class Phase4Scene(BaseScene):
             return
         match event.key:
             case pygame.K_ESCAPE:
-                save_mgr.save(self.flags, self.player)
+                save_mgr.save(self.flags, self.player, self.game.nickname)
                 self.transition_to("menu")
             case pygame.K_f:
                 self._trigger_voice()
@@ -340,7 +340,7 @@ class Phase4Scene(BaseScene):
                 "Faxineira", "Sai da frente, seu besouro!", duration=2.0)
 
         # Tenants patrol
-        self.tenant_group.update(dt, self.tilemap, self.player)
+        self.tenant_group.update(dt, self.tilemap, self.player, self.sound)
 
         # RF011 trash
         self._update_trash(dt)

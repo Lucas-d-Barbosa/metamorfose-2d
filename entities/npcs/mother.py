@@ -12,3 +12,4 @@ class Mother(NPC):
     fov_angle = 90.0
     speed = 50.0
     color = (180, 140, 160)
+    sprite_key = "mother"

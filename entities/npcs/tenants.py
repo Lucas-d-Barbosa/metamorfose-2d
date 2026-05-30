@@ -19,6 +19,7 @@ class Tenant(NPC):
     fov_angle = 130.0   # Manager 100 × 1.3
     speed = 72.0
     color = (95, 85, 125)   # cinza-arroxeado
+    sprite_key = "tenant"
 
 
 class TenantGroup:
@@ -38,9 +39,9 @@ class TenantGroup:
 
     # ------------------------------------------------------------------
 
-    def update(self, dt: float, tilemap, player) -> None:
+    def update(self, dt: float, tilemap, player, sound_system=None) -> None:
         for t in self.tenants:
-            t.update(dt, tilemap, player)
+            t.update(dt, tilemap, player, sound_system)
         self._sync_alert()
 
     def _sync_alert(self) -> None:

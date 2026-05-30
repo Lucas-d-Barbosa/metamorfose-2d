@@ -87,11 +87,11 @@ class TileMap:
         row_start = max(0, -oy // ts)
         row_end = min(self.rows, (-oy + screen_h) // ts + 2)
 
+        from systems.tile_renderer import get_tile_surface
         for r in range(row_start, row_end):
             for c in range(col_start, col_end):
                 tile = self.layout[r][c]
-                color = _TILE_COLORS.get(tile, (80, 80, 80))
-                border = _TILE_BORDER.get(tile, (50, 50, 50))
-                rect = pygame.Rect(c * ts + ox, r * ts + oy, ts, ts)
-                pygame.draw.rect(surface, color, rect)
-                pygame.draw.rect(surface, border, rect, 1)
+                tile_surf = get_tile_surface(tile, ts)
+                dest_x = c * ts + ox
+                dest_y = r * ts + oy
+                surface.blit(tile_surf, (dest_x, dest_y))

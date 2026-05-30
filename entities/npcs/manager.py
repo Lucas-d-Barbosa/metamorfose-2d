@@ -8,3 +8,4 @@ class Manager(NPC):
     fov_angle = 100.0
     speed = 85.0
     color = (140, 100, 60)
+    sprite_key = "manager"

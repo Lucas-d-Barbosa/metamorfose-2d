@@ -12,13 +12,14 @@ class NPC(pygame.sprite.Sprite):
     Base top-down NPC with waypoint patrol and FOV-based stealth detection.
 
     Subclasses override:
-        fov_range, fov_angle, speed, color
+        fov_range, fov_angle, speed, color, sprite_key
     """
 
-    fov_range: float = 180.0
-    fov_angle: float = 90.0
-    speed: float = 70.0
-    color: tuple[int, int, int] = (180, 120, 60)
+    fov_range:  float = 180.0
+    fov_angle:  float = 90.0
+    speed:      float = 70.0
+    color:      tuple[int, int, int] = (180, 120, 60)
+    sprite_key: str = "generic"
 
     def __init__(self, waypoints: list[tuple[float, float]]) -> None:
         super().__init__()
@@ -42,26 +43,41 @@ class NPC(pygame.sprite.Sprite):
         self.debug_fov: bool = False
 
     def _redraw_sprite(self) -> None:
-        self.image.fill((0, 0, 0, 0))
-        size = self.image.get_width()
-        pygame.draw.circle(self.image, self.color, (size // 2, size // 2), size // 2)
-        pygame.draw.circle(self.image, (255, 255, 255),
-                           (size // 2, size // 4), 3)
+        alert_obj = getattr(self, "alert", None)
+        if self.sprite_key != "generic":
+            from systems.sprite_generator import get_npc_sprite
+            alert_dot = alert_obj.color if alert_obj is not None else None
+            base_img = get_npc_sprite(self.sprite_key, alert_dot_color=alert_dot)
+        else:
+            # Fallback: plain circle
+            base_img = pygame.Surface((TILE_SIZE - 8, TILE_SIZE - 8), pygame.SRCALPHA)
+            size = base_img.get_width()
+            pygame.draw.circle(base_img, self.color, (size // 2, size // 2), size // 2)
+            dot_c = alert_obj.color if alert_obj else (255, 255, 255)
+            pygame.draw.circle(base_img, dot_c, (size // 2, size // 4), 3)
+
+        rotation = -(getattr(self, "facing_angle", -90.0) + 90)
+        self.image = pygame.transform.rotate(base_img, rotation)
+        # pos may not exist yet on the first __init__ call; let __init__ set rect then
+        if hasattr(self, "pos"):
+            self.rect = self.image.get_rect(
+                center=(round(self.pos.x), round(self.pos.y))
+            )
 
     # -------------------------------------------------------------------------
     # Update
     # -------------------------------------------------------------------------
 
-    def update(self, dt: float, tilemap, player) -> None:
+    def update(self, dt: float, tilemap, player, sound_system=None) -> None:
         sees = is_in_fov(self.pos, self.facing_angle, self.fov_angle,
                          self.fov_range, player.pos, tilemap)
-        hears, source = player._last_heard_source if hasattr(player, '_last_heard_source') else (False, None)
+        hears, _src = sound_system.heard_at(self.pos, tilemap) if sound_system is not None else (False, None)
 
         prev_state = self.alert.state
         new_state = self.alert.tick(
             dt,
             sees_player=sees and not player.hidden,
-            hears_player=False,
+            hears_player=hears,
             player_pos=(player.pos.x, player.pos.y),
         )
 
@@ -72,13 +88,7 @@ class NPC(pygame.sprite.Sprite):
         elif new_state == AlertState.SEARCH:
             self._search(dt, tilemap)
 
-        self.rect.center = (round(self.pos.x), round(self.pos.y))
-        self._redraw_sprite()
-        # Draw alert color dot
-        dot_color = self.alert.color
-        pygame.draw.circle(self.image,
-                           dot_color,
-                           (self.image.get_width() // 2, 4), 3)
+        self._redraw_sprite()  # sets self.image and self.rect
 
     # -------------------------------------------------------------------------
     # Patrol
@@ -156,7 +166,7 @@ class NPC(pygame.sprite.Sprite):
         screen_pos = self.pos + camera_offset
         bar_w, bar_h = 32, 4
         x = int(screen_pos.x) - bar_w // 2
-        y = int(screen_pos.y) - self.image.get_height() // 2 - 8
+        y = int(screen_pos.y) - 20  # fixed offset — image height varies with rotation
         pygame.draw.rect(surface, (40, 40, 40), (x, y, bar_w, bar_h))
         fill_w = int(bar_w * self.alert.suspicion_ratio)
         pygame.draw.rect(surface, self.alert.color, (x, y, fill_w, bar_h))

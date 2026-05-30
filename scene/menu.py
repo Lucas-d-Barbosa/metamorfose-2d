@@ -16,7 +16,7 @@ class MenuScene(BaseScene):
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.KEYDOWN:
             if event.key in (pygame.K_RETURN, pygame.K_SPACE):
-                self.transition_to("phase1")
+                self.transition_to("profile_select")
             elif event.key == pygame.K_ESCAPE:
                 self.game.running = False
 

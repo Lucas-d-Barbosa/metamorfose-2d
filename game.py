@@ -1,25 +1,37 @@
+from functools import partial
+
 import pygame
 
 from crt import CRT
 from scene.base_scene import BaseScene
 from scene.epilogue import EpilogueScene
 from scene.game_over import GameOverScene
+from scene.intro_cutscene import IntroCutsceneScene
 from scene.menu import MenuScene
+from scene.profile_select import ProfileSelectScene
 from scene.phase1 import Phase1Scene
 from scene.phase2 import Phase2Scene
 from scene.phase3 import Phase3Scene
 from scene.phase4 import Phase4Scene
+from scene.transition import ChapterTransitionScene
+from scene.tutorial import TutorialScene
 from settings import FPS, SCREEN_HEIGHT, SCREEN_WIDTH
 
 
-_SCENE_REGISTRY: dict[str, type[BaseScene]] = {
-    "menu": MenuScene,
-    "phase1": Phase1Scene,
-    "phase2": Phase2Scene,
-    "phase3": Phase3Scene,
-    "phase4": Phase4Scene,
-    "game_over": GameOverScene,
-    "epilogue": EpilogueScene,
+_SCENE_REGISTRY: dict = {
+    "menu":           MenuScene,
+    "profile_select": ProfileSelectScene,
+    "intro_cutscene": IntroCutsceneScene,
+    "tutorial":       TutorialScene,
+    "phase1":         Phase1Scene,
+    "phase2":         Phase2Scene,
+    "phase3":         Phase3Scene,
+    "phase4":         Phase4Scene,
+    "game_over":      GameOverScene,
+    "epilogue":       EpilogueScene,
+    "transition_1_2": partial(ChapterTransitionScene, chapter_id="1_2"),
+    "transition_2_3": partial(ChapterTransitionScene, chapter_id="2_3"),
+    "transition_3_4": partial(ChapterTransitionScene, chapter_id="3_4"),
 }
 
 
@@ -31,6 +43,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         self.crt = CRT(self.screen)
+        self.nickname: str = ""          # set by ProfileSelectScene
         self.current_scene: BaseScene = MenuScene(self)
 
     # -------------------------------------------------------------------------

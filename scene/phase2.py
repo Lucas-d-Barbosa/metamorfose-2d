@@ -41,9 +41,8 @@ from ui.hud import HUD
 # ---------------------------------------------------------------------------
 
 _CUTSCENE = [
-    ("Grete", "Ele deve estar com tanta fome… deixei o leite fresquinho que ele sempre gostou."),
+    ("Grete",  "Ele deve estar com tanta fome… deixei o leite fresquinho que ele sempre gostou."),
     ("Gregor", "Era minha bebida favorita… mas o cheiro… me dá nojo agora."),
-    ("Gregor", "Dias se passaram. Preciso encontrar comida antes que amanheça."),
 ]
 
 # RF008 — listening zones dialogues
@@ -114,7 +113,7 @@ class Phase2Scene(BaseScene):
     def __init__(self, game) -> None:
         super().__init__(game)
 
-        self.flags = save_mgr.load()
+        self.flags = save_mgr.load(self.game.nickname)
 
         self.tilemap = TileMap(phase2_room(), TILE_SIZE)
         self.camera = Camera(self.tilemap.width, self.tilemap.height)
@@ -275,7 +274,7 @@ class Phase2Scene(BaseScene):
             return
         match event.key:
             case pygame.K_ESCAPE:
-                save_mgr.save(self.flags, self.player)
+                save_mgr.save(self.flags, self.player, self.game.nickname)
                 self.transition_to("menu")
             case pygame.K_f:
                 self._trigger_voice()
@@ -311,7 +310,7 @@ class Phase2Scene(BaseScene):
         self.sound.update(dt)
 
         for npc in self.npcs:
-            npc.update(dt, self.tilemap, self.player)
+            npc.update(dt, self.tilemap, self.player, self.sound)
 
         # RF008 — Listening zones
         self._update_listening_zones(dt)
@@ -393,7 +392,7 @@ class Phase2Scene(BaseScene):
             return
         match event.key:
             case pygame.K_ESCAPE:
-                save_mgr.save(self.flags, self.player)
+                save_mgr.save(self.flags, self.player, self.game.nickname)
                 self.transition_to("menu")
             case pygame.K_f:
                 self._trigger_voice()
@@ -430,7 +429,7 @@ class Phase2Scene(BaseScene):
         self.sound.update(dt)
 
         for npc in self.npcs:
-            npc.update(dt, self.tilemap, self.player)
+            npc.update(dt, self.tilemap, self.player, self.sound)
 
         self._update_flash(dt)
         self._update_voice_wave(dt)
@@ -483,7 +482,7 @@ class Phase2Scene(BaseScene):
     def _on_mission_success(self) -> None:
         self._mission_done = True
         self.flags.saved_picture = True
-        save_mgr.save(self.flags, self.player)
+        save_mgr.save(self.flags, self.player, self.game.nickname)
         self._flash = {"color": (200, 220, 255), "alpha": 130,
                        "duration": 0.6, "elapsed": 0.0}
         self.dialogue.show_thought(
@@ -516,8 +515,8 @@ class Phase2Scene(BaseScene):
         if self._phase_end_timer >= 8.0:
             self.flags.phase2_complete = True
             self.flags.phase = 3
-            save_mgr.save(self.flags, self.player)
-            self.transition_to("phase3")
+            save_mgr.save(self.flags, self.player, self.game.nickname)
+            self.transition_to("transition_2_3")
 
     # =========================================================================
     # Shared helpers

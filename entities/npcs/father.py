@@ -19,6 +19,7 @@ class Father(NPC):
     fov_angle = 80.0
     speed = 115.0
     color = (150, 70, 35)
+    sprite_key = "father"
 
     KNOCKBACK_FORCE = 500.0
     CONTACT_RADIUS = TILE_SIZE

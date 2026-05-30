@@ -29,36 +29,36 @@ def _fill_rect(layout: list[list[int]], r1: int, c1: int,
 
 
 # ---------------------------------------------------------------------------
-# Phase 1 — Gregor's Bedroom (42 cols × 24 rows = 1344 × 768 pixels @ 32px)
+# Phase 1 — Gregor's Bedroom (24 cols × 16 rows = 768 × 512 pixels @ 32px)
+# Fits entirely on a 1280×720 screen — the full room is visible at once.
 # ---------------------------------------------------------------------------
 def phase1_room() -> list[list[int]]:
-    COLS, ROWS = 42, 24
+    COLS, ROWS = 24, 16
     layout = _empty(ROWS, COLS)
     _border(layout)
 
-    # Door gap in bottom wall (cols 19–20)
-    layout[ROWS - 1][19] = DOOR_OPEN
-    layout[ROWS - 1][20] = DOOR_OPEN
+    # Door gap in bottom wall — centre (cols 11–12)
+    layout[ROWS - 1][11] = DOOR_OPEN
+    layout[ROWS - 1][12] = DOOR_OPEN
 
-    # Wardrobe — top-left area (cols 2–3, rows 2–5)
-    _fill_rect(layout, 2, 2, 5, 3, FURNITURE)
+    # Wardrobe — left wall (cols 1–2, rows 9–11)
+    _fill_rect(layout, 9, 1, 11, 2, FURNITURE)
 
-    # Bed — center-left (cols 7–10, rows 9–11)
-    _fill_rect(layout, 9, 7, 11, 10, FURNITURE)
-    # Crevice under bed: mark floor tiles adjacent to bed bottom as ceiling_access
-    for c in range(7, 11):
-        layout[12][c] = CEILING_ACCESS
+    # Bed — top-left (cols 2–4, rows 4–6)
+    _fill_rect(layout, 4, 2, 6, 4, FURNITURE)
+    # Ceiling access under bed
+    for c in range(2, 5):
+        layout[7][c] = CEILING_ACCESS
 
-    # Picture frame on wall (col 0, rows 6–7) — not solid, just visual marker
-    # Represented as a ceiling_access tile (player can press against it)
-    layout[6][1] = CEILING_ACCESS
-    layout[7][1] = CEILING_ACCESS
+    # Picture frame (ceiling access) — left wall, rows 4–5
+    layout[4][1] = CEILING_ACCESS
+    layout[5][1] = CEILING_ACCESS
 
-    # Desk — right side (cols 37–39, rows 3–5)
-    _fill_rect(layout, 3, 37, 5, 39, FURNITURE)
+    # Desk — top-right (cols 19–22, rows 3–5)
+    _fill_rect(layout, 3, 19, 5, 22, FURNITURE)
 
-    # Scattered items table (cols 25–27, rows 14–15)
-    _fill_rect(layout, 14, 25, 15, 27, FURNITURE)
+    # Scattered items table — mid-right (cols 15–17, rows 9–11)
+    _fill_rect(layout, 9, 15, 11, 17, FURNITURE)
 
     return layout
 

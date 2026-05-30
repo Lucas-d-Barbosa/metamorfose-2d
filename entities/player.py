@@ -1,3 +1,4 @@
+import math
 from typing import Literal
 
 import pygame
@@ -20,12 +21,19 @@ from settings import (
 
 ZLevel = Literal["floor", "ceiling"]
 
+# animation speed (frames per second)
+_ANIM_FPS_WALK = 10.0
+_ANIM_FPS_IDLE = 4.0
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, x: float, y: float) -> None:
         super().__init__()
 
         self.image = pygame.Surface((TILE_SIZE - 4, TILE_SIZE - 4), pygame.SRCALPHA)
+        self._anim_name: str = "idle"
+        self._anim_frame: int = 0
+        self._anim_timer: float = 0.0
         self._build_sprite()
         self.rect = self.image.get_rect(center=(x, y))
         self.hitbox = self.rect.inflate(-8, -8)
@@ -56,18 +64,40 @@ class Player(pygame.sprite.Sprite):
 
     def _build_sprite(self) -> None:
         try:
-            from systems.sprite_loader import get_player_sprite
-            facing_left = self.velocity.x < -5 if hasattr(self, "velocity") else False
-            self.image = get_player_sprite(
-                apple_debuff=self.apple_debuff,
-                z_level=self.z_level,
-                facing_left=facing_left,
+            from systems.sprite_loader import get_animation_frame, frame_count
+            anim = getattr(self, "_anim_name", "idle")
+            fidx = getattr(self, "_anim_frame", 0)
+            raw = get_animation_frame(
+                anim, fidx,
+                apple_debuff=getattr(self, "apple_debuff", False),
+                z_level=getattr(self, "z_level", "floor"),
             )
         except Exception:
-            self.image.fill((0, 0, 0, 0))
-            size = self.image.get_width()
-            pygame.draw.circle(self.image, GREEN, (size // 2, size // 2), size // 2)
-            pygame.draw.circle(self.image, WHITE, (size // 2, size // 4), 3)
+            raw = pygame.Surface((TILE_SIZE - 4, TILE_SIZE - 4), pygame.SRCALPHA)
+            raw.fill((0, 0, 0, 0))
+            size = raw.get_width()
+            pygame.draw.circle(raw, GREEN, (size // 2, size // 2), size // 2)
+            pygame.draw.circle(raw, WHITE, (size // 2, size // 4), 3)
+            self.image = raw
+            if hasattr(self, "pos"):
+                self.rect = self.image.get_rect(
+                    center=(round(self.pos.x), round(self.pos.y))
+                )
+            return
+
+        # Side-view (walk/stealth) sprites: no rotation needed.
+        # Top-down idle sprites: rotate to match facing direction.
+        anim = getattr(self, "_anim_name", "idle")
+        if anim == "idle":
+            rotation = -(getattr(self, "facing_angle", -90.0) + 90)
+            self.image = pygame.transform.rotate(raw, rotation)
+        else:
+            self.image = raw
+
+        if hasattr(self, "pos"):
+            self.rect = self.image.get_rect(
+                center=(round(self.pos.x), round(self.pos.y))
+            )
 
     def apply_apple_debuff(self) -> None:
         if self.apple_debuff:
@@ -123,6 +153,7 @@ class Player(pygame.sprite.Sprite):
         self._move(dt)
         self._update_stats(dt)
         self._update_facing()
+        self._advance_animation(dt)
         self._build_sprite()
 
     def _move(self, dt: float) -> None:
@@ -149,9 +180,45 @@ class Player(pygame.sprite.Sprite):
             self.noise_radius = FOOTSTEP_NOISE_RADIUS
 
     def _update_facing(self) -> None:
-        if self.direction.length_squared() > 0:
-            import math
-            self.facing_angle = math.degrees(math.atan2(self.direction.y, self.direction.x))
+        moving = self.direction.length_squared() > 0
+        if moving:
+            self.facing_angle = math.degrees(
+                math.atan2(self.direction.y, self.direction.x)
+            )
+
+        # Choose animation based on horizontal movement
+        stealth = self.hidden or self.apple_debuff
+        if not moving:
+            new_anim = "idle"
+        elif self.direction.x > 0.1:
+            new_anim = "stealth_right" if stealth else "walk_right"
+        elif self.direction.x < -0.1:
+            new_anim = "stealth_left" if stealth else "walk_left"
+        else:
+            # Up or down only – keep last horizontal anim or idle
+            if self._anim_name in ("walk_right", "stealth_right"):
+                new_anim = "stealth_right" if stealth else "walk_right"
+            elif self._anim_name in ("walk_left", "stealth_left"):
+                new_anim = "stealth_left" if stealth else "walk_left"
+            else:
+                new_anim = "idle"
+
+        if new_anim != self._anim_name:
+            self._anim_name = new_anim
+            self._anim_frame = 0
+            self._anim_timer = 0.0
+
+    def _advance_animation(self, dt: float) -> None:
+        fps = _ANIM_FPS_WALK if self._anim_name != "idle" else _ANIM_FPS_IDLE
+        self._anim_timer += dt
+        if self._anim_timer >= 1.0 / fps:
+            self._anim_timer -= 1.0 / fps
+            try:
+                from systems.sprite_loader import frame_count
+                n = frame_count(self._anim_name)
+            except Exception:
+                n = 6
+            self._anim_frame = (self._anim_frame + 1) % max(1, n)
 
     def receive_knockback(self, direction: pygame.math.Vector2,
                           force: float) -> None:

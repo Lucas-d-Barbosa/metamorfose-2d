@@ -1,7 +1,15 @@
-# Ambientes virtuais
+# Ambientes virtuais / bibliotecas instaladas
+# (as dependencias ficam declaradas em requirements.txt, nao versionadas)
 venv/
 .venv/
 env/
+pygame/
+*/site-packages/
+pyvenv.cfg
+
+# Dados de runtime (saves gerados pelo jogo)
+saves/
+save.json
 
 # Caches do Python
 **/__pycache__/

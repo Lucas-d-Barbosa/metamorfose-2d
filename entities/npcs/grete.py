@@ -10,3 +10,4 @@ class Grete(NPC):
     fov_angle = 70.0
     speed = 65.0
     color = (130, 160, 180)
+    sprite_key = "grete"

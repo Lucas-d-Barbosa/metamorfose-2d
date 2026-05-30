@@ -14,15 +14,22 @@ class Camera:
         self.world_height = world_height
 
     def update(self, target: pygame.math.Vector2) -> None:
-        target_x = SCREEN_WIDTH / 2 - target.x
-        target_y = SCREEN_HEIGHT / 2 - target.y
-        self.offset.x += (target_x - self.offset.x) * self.LERP_SPEED
-        self.offset.y += (target_y - self.offset.y) * self.LERP_SPEED
-        # Clamp so we never show beyond world edges
-        max_x = min(0.0, SCREEN_WIDTH - self.world_width)
-        max_y = min(0.0, SCREEN_HEIGHT - self.world_height)
-        self.offset.x = max(max_x, min(0.0, self.offset.x))
-        self.offset.y = max(max_y, min(0.0, self.offset.y))
+        # When the world is smaller than the screen, center it instead of scrolling.
+        if self.world_width <= SCREEN_WIDTH:
+            self.offset.x = (SCREEN_WIDTH - self.world_width) / 2
+        else:
+            target_x = SCREEN_WIDTH / 2 - target.x
+            self.offset.x += (target_x - self.offset.x) * self.LERP_SPEED
+            self.offset.x = max(SCREEN_WIDTH - self.world_width,
+                                min(0.0, self.offset.x))
+
+        if self.world_height <= SCREEN_HEIGHT:
+            self.offset.y = (SCREEN_HEIGHT - self.world_height) / 2
+        else:
+            target_y = SCREEN_HEIGHT / 2 - target.y
+            self.offset.y += (target_y - self.offset.y) * self.LERP_SPEED
+            self.offset.y = max(SCREEN_HEIGHT - self.world_height,
+                                min(0.0, self.offset.y))
 
     # ---- Coordinate helpers -------------------------------------------------
 

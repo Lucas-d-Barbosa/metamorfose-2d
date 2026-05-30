@@ -40,9 +40,7 @@ from ui.hud import HUD
 # ---------------------------------------------------------------------------
 
 _CUTSCENE = [
-    ("Pai",   "O que foi essa confusão? Ela desmaiou de novo?!"),
-    ("Grete", "Foi ele, pai! Ele escapou do quarto!"),
-    ("Pai",   "Eu já disse para vocês! Eu sabia que isso ia acontecer!"),
+    ("Gregor", "O pai me empurrou de volta. O quarto agora é um depósito."),
 ]
 
 _PATROL_DIALOGUES = [
@@ -83,7 +81,7 @@ class Phase3Scene(BaseScene):
     def __init__(self, game) -> None:
         super().__init__(game)
 
-        self.flags = save_mgr.load()
+        self.flags = save_mgr.load(self.game.nickname)
 
         self.tilemap = TileMap(phase3_room(), TILE_SIZE)
         self.camera = Camera(self.tilemap.width, self.tilemap.height)
@@ -240,7 +238,7 @@ class Phase3Scene(BaseScene):
             return
         match event.key:
             case pygame.K_ESCAPE:
-                save_mgr.save(self.flags, self.player)
+                save_mgr.save(self.flags, self.player, self.game.nickname)
                 self.transition_to("menu")
             case pygame.K_f:
                 self._trigger_voice()
@@ -285,7 +283,7 @@ class Phase3Scene(BaseScene):
 
         # Father update + apple throw
         for npc in self.npcs:
-            npc.update(dt, self.tilemap, self.player)
+            npc.update(dt, self.tilemap, self.player, self.sound)
         apple = self.father.try_throw(dt, self.player.pos)
         if apple:
             self.projectiles.append(apple)
@@ -340,7 +338,7 @@ class Phase3Scene(BaseScene):
 
         self.player.apply_apple_debuff()
         self.flags.apple_debuff = True
-        save_mgr.save(self.flags, self.player)
+        save_mgr.save(self.flags, self.player, self.game.nickname)
         self._apple_debuff_applied = True
 
         self._flash = {"color": (220, 60, 30), "alpha": 160,
@@ -367,8 +365,8 @@ class Phase3Scene(BaseScene):
         if self._phase_end_countdown >= 8.0:
             self.flags.phase3_complete = True
             self.flags.phase = 4
-            save_mgr.save(self.flags, self.player)
-            self.transition_to("phase4")
+            save_mgr.save(self.flags, self.player, self.game.nickname)
+            self.transition_to("transition_3_4")
 
     # =========================================================================
     # RF011 — Trash + dust

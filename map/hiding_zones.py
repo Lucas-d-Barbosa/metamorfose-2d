@@ -32,19 +32,16 @@ class HidingZone:
 
 def build_phase1_hiding_zones(tile_size: int = 32) -> list[HidingZone]:
     """
-    Returns hiding zones for Phase 1's room layout.
+    Returns hiding zones for Phase 1's room layout (24×16 map).
 
     Positions match map/layouts.py phase1_room():
-      - Bed at rows 9–11, cols 7–10
-      - Wardrobe at rows 2–5, cols 2–3
-      - Desk at rows 3–5, cols 37–39
+      - Bed at rows 4–6, cols 2–4  →  ceiling_access row 7, cols 2–4
+      - Wardrobe at rows 9–11, cols 1–2  →  gap at col 3
+      - Desk at rows 3–5, cols 19–22  →  south side row 6
     """
     ts = tile_size
     return [
-        # Under the bed (CEILING_ACCESS row below furniture)
-        HidingZone(pygame.Rect(7 * ts, 12 * ts, 4 * ts, ts), label="cama"),
-        # Beside the wardrobe (narrow gap)
-        HidingZone(pygame.Rect(4 * ts, 3 * ts, ts, 3 * ts), label="guarda-roupa"),
-        # Under the desk (south side)
-        HidingZone(pygame.Rect(37 * ts, 6 * ts, 3 * ts, ts), label="escrivaninha"),
+        HidingZone(pygame.Rect(2 * ts, 7 * ts, 3 * ts, ts),      label="cama"),
+        HidingZone(pygame.Rect(3 * ts, 9 * ts, ts,  3 * ts),     label="guarda-roupa"),
+        HidingZone(pygame.Rect(19 * ts, 6 * ts, 4 * ts, ts),     label="escrivaninha"),
     ]

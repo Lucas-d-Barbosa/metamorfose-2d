@@ -15,12 +15,12 @@ from settings import SCREEN_HEIGHT, SCREEN_WIDTH
 
 class DoorMinigame:
     BAR_W = 320
-    BAR_H = 28
-    BASE_SPEED = 190.0
-    SPEED_RAMP = 22.0       # added per total attempt
-    GREEN_ZONE_W = 72
-    SUCCESSES_NEEDED = 3
-    MAX_MISSES = 4           # cancel after this many misses
+    BAR_H = 32
+    BASE_SPEED = 110.0       # slow cursor — easy to time
+    SPEED_RAMP = 5.0         # barely speeds up between attempts
+    GREEN_ZONE_W = 130       # ~40 % of the bar — hard to miss
+    SUCCESSES_NEEDED = 2     # only 2 hits needed
+    MAX_MISSES = 8           # very forgiving
 
     def __init__(self) -> None:
         self.active = False
@@ -111,12 +111,13 @@ class DoorMinigame:
         surface.blit(thought, thought.get_rect(centerx=cx, centery=cy - 58))
 
         # ---- Success dots ----
-        dot_r = 8
+        dot_r = 10
+        total_w = self.SUCCESSES_NEEDED * (dot_r * 2 + 8)
         for i in range(self.SUCCESSES_NEEDED):
-            dot_x = cx + (i - 1) * 28 + shake
-            dot_y = cy - 26
+            dot_x = cx - total_w // 2 + i * (dot_r * 2 + 8) + dot_r + shake
+            dot_y = cy - 30
             filled = i < self.successes
-            color = (70, 215, 100) if filled else (55, 55, 55)
+            color = (70, 215, 100) if filled else (45, 45, 45)
             pygame.draw.circle(surface, color, (dot_x, dot_y), dot_r)
             pygame.draw.circle(surface, (190, 190, 190), (dot_x, dot_y), dot_r, 1)
 

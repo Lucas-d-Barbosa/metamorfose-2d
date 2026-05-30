@@ -79,7 +79,7 @@ class Phase1Scene(BaseScene):
     def __init__(self, game) -> None:
         super().__init__(game)
 
-        self.flags = save_mgr.load()
+        self.flags = save_mgr.load(self.game.nickname)
 
         # Map & camera
         self.tilemap = TileMap(phase1_room(), TILE_SIZE)
@@ -90,14 +90,14 @@ class Phase1Scene(BaseScene):
         self.player = Player(cx, cy)
         save_mgr.apply_to_player(self.flags, self.player)
 
-        # NPCs
-        door_x = 19.5 * TILE_SIZE
-        door_y = 21 * TILE_SIZE
+        # NPCs — door is at row 15, cols 11-12 (24×16 map)
+        door_x = 11.5 * TILE_SIZE   # horizontal centre between cols 11-12
+        door_y = 13 * TILE_SIZE     # two rows above the door tile
         self.manager = Manager([
-            (door_x - 3 * TILE_SIZE, door_y),
-            (door_x + 3 * TILE_SIZE, door_y),
-            (door_x + 3 * TILE_SIZE, door_y - 2 * TILE_SIZE),
-            (door_x - 3 * TILE_SIZE, door_y - 2 * TILE_SIZE),
+            (door_x - 2 * TILE_SIZE, door_y),
+            (door_x + 2 * TILE_SIZE, door_y),
+            (door_x + 2 * TILE_SIZE, door_y - 2 * TILE_SIZE),
+            (door_x - 2 * TILE_SIZE, door_y - 2 * TILE_SIZE),
         ])
         self.father: Father | None = None
         self.npcs: list = [self.manager]
@@ -116,13 +116,27 @@ class Phase1Scene(BaseScene):
         self.hud = HUD(phase=self.PHASE)
         self.dialogue = DialogueSystem()
 
-        # Door trigger zone
+        # Door trigger zone — rows 12-15, cols 9-15 (24×16 map)
         self._door_trigger = pygame.Rect(
-            17 * TILE_SIZE, 20 * TILE_SIZE,
+            9 * TILE_SIZE, 12 * TILE_SIZE,
             6 * TILE_SIZE, 4 * TILE_SIZE,
         )
         self._door_prompt_shown = False
         self._door_approach_thought_shown = False
+
+        # Physical door blockers — row 15, cols 11-12 (24×16 map).
+        # DOOR_OPEN is not solid in TileMap, so we add blockers here and
+        # clear them only when the door is actually unlocked.
+        _dr = 15  # ROWS - 1
+        if self.flags.door_unlocked_phase1:
+            # Save already has the door unlocked (e.g. returning to phase 1
+            # after a previous playthrough). Skip the blocker entirely.
+            self._door_walls: list[pygame.Rect] = []
+        else:
+            self._door_walls = [
+                pygame.Rect(11 * TILE_SIZE, _dr * TILE_SIZE, TILE_SIZE, TILE_SIZE),
+                pygame.Rect(12 * TILE_SIZE, _dr * TILE_SIZE, TILE_SIZE, TILE_SIZE),
+            ]
 
         # Minigame
         self.minigame = DoorMinigame()
@@ -147,10 +161,11 @@ class Phase1Scene(BaseScene):
     # =========================================================================
 
     def _populate_food(self) -> None:
-        self.food_group.add(FoodItem(*_ts(9,  13), FoodType.FRESH,  "milk"))
-        self.food_group.add(FoodItem(*_ts(36,  6), FoodType.FRESH,  "apple"))
-        self.food_group.add(FoodItem(*_ts(5,   5), FoodType.ROTTEN, "cheese"))
-        self.food_group.add(FoodItem(*_ts(3,  20), FoodType.ROTTEN, "scraps"))
+        # Positions for 24×16 map
+        self.food_group.add(FoodItem(*_ts(8,  5), FoodType.FRESH,  "milk"))
+        self.food_group.add(FoodItem(*_ts(20, 2), FoodType.FRESH,  "apple"))
+        self.food_group.add(FoodItem(*_ts(4, 10), FoodType.ROTTEN, "cheese"))
+        self.food_group.add(FoodItem(*_ts(3, 13), FoodType.ROTTEN, "scraps"))
 
     # =========================================================================
     # Cutscene state
@@ -236,7 +251,7 @@ class Phase1Scene(BaseScene):
             return
         match event.key:
             case pygame.K_ESCAPE:
-                save_mgr.save(self.flags, self.player)
+                save_mgr.save(self.flags, self.player, self.game.nickname)
                 self.transition_to("menu")
             case pygame.K_f:
                 self._trigger_voice()
@@ -290,7 +305,7 @@ class Phase1Scene(BaseScene):
 
         # NPCs
         for npc in self.npcs:
-            npc.update(dt, self.tilemap, self.player)
+            npc.update(dt, self.tilemap, self.player, self.sound)
 
         # Father knockback
         if self.father:
@@ -339,7 +354,8 @@ class Phase1Scene(BaseScene):
 
     def _on_door_unlocked(self) -> None:
         self.flags.door_unlocked_phase1 = True
-        save_mgr.save(self.flags, self.player)
+        save_mgr.save(self.flags, self.player, self.game.nickname)
+        self._door_walls = []   # remove physical blocker — door is open
         self.dialogue.show_thought(
             "Consegui… a porta está aberta.", duration=3.0,
             color=(200, 220, 255),
@@ -361,9 +377,9 @@ class Phase1Scene(BaseScene):
         # Manager flees — remove from NPCs
         self.npcs = [n for n in self.npcs if n is not self.manager]
 
-        # Spawn Father at the door
-        door_cx = 19.5 * TILE_SIZE
-        door_cy = 22 * TILE_SIZE
+        # Spawn Father at the door (24×16 map: row 15, cols 11-12)
+        door_cx = 11.5 * TILE_SIZE
+        door_cy = 14 * TILE_SIZE
         room_cx = self.tilemap.width / 2
         room_cy = self.tilemap.height / 2
         self.father = Father(
@@ -389,8 +405,8 @@ class Phase1Scene(BaseScene):
             self._phase_end_done = True
             self.flags.phase1_complete = True
             self.flags.phase = 2
-            save_mgr.save(self.flags, self.player)
-            self.transition_to("phase2")
+            save_mgr.save(self.flags, self.player, self.game.nickname)
+            self.transition_to("transition_1_2")
 
     # =========================================================================
     # Shared helpers
@@ -398,7 +414,8 @@ class Phase1Scene(BaseScene):
 
     def _resolve_collisions(self) -> None:
         from systems.collision import resolve_wall_collisions
-        resolve_wall_collisions(self.player, self.tilemap.walls_near(self.player.hitbox))
+        walls = self.tilemap.walls_near(self.player.hitbox) + self._door_walls
+        resolve_wall_collisions(self.player, walls)
 
     def _try_eat(self) -> None:
         if not self._nearby_food:
@@ -508,6 +525,10 @@ class Phase1Scene(BaseScene):
         if self._nearby_food and self._state == "gameplay":
             self._nearby_food.draw_prompt(surface, self.camera.offset)
 
+        # Door indicator — always visible when door is locked
+        if not self.flags.door_unlocked_phase1 and self._state in ("gameplay", "door_minigame"):
+            self._draw_door_indicator(surface)
+
         if not self.flags.door_unlocked_phase1 \
                 and self._door_trigger.colliderect(self.player.hitbox) \
                 and self._state == "gameplay":
@@ -558,10 +579,36 @@ class Phase1Scene(BaseScene):
         surface.blit(ws, (0, 0))
 
     def _draw_door_prompt(self, surface: pygame.Surface) -> None:
-        font = pygame.font.SysFont("monospace", 12)
-        surf = font.render("[ E ] Destrancar a porta", True, (200, 180, 100))
+        font = pygame.font.SysFont("monospace", 13)
+        surf = font.render("[ E ] Destrancar a porta", True, (255, 230, 80))
         surface.blit(surf, surf.get_rect(
             centerx=SCREEN_WIDTH // 2, centery=SCREEN_HEIGHT - 55))
+
+    def _draw_door_indicator(self, surface: pygame.Surface) -> None:
+        """Pulsing arrow + label drawn in world-space above the door tile."""
+        import math
+        pulse = (math.sin(pygame.time.get_ticks() / 380.0) + 1.0) / 2.0  # 0–1
+
+        # World centre of the door (row 15, cols 11-12 → x=368, y=14.5*32)
+        door_wx = 11.5 * TILE_SIZE
+        door_wy = 14.0 * TILE_SIZE  # one row above the door tile
+
+        sp = self.camera.apply_vec(pygame.math.Vector2(door_wx, door_wy))
+        sx, sy = int(sp.x), int(sp.y)
+
+        bright = int(180 + 75 * pulse)
+        color  = (bright, int(bright * 0.87), 30)
+
+        # Downward-pointing triangle
+        sz = int(10 + 5 * pulse)
+        pts = [(sx, sy + sz), (sx - sz, sy - sz // 2), (sx + sz, sy - sz // 2)]
+        pygame.draw.polygon(surface, color, pts)
+        pygame.draw.polygon(surface, (0, 0, 0), pts, 1)  # thin outline
+
+        # "PORTA" label
+        font = pygame.font.SysFont("monospace", 11)
+        lbl = font.render("PORTA", True, color)
+        surface.blit(lbl, lbl.get_rect(centerx=sx, bottom=sy - sz - 2))
 
     def _draw_flash(self, surface: pygame.Surface) -> None:
         if not self._flash:

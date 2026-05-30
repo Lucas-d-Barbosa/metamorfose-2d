@@ -16,6 +16,7 @@ class Janitor(NPC):
     fov_angle = 80.0
     speed = 58.0
     color = (160, 155, 120)
+    sprite_key = "janitor"
 
     CONTACT_RADIUS = TILE_SIZE * 1.2
     KNOCKBACK_FORCE = 380.0
